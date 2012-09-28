@@ -68,6 +68,7 @@ define postfix::transport (
 
   augeas {"Postfix transport - ${name}":
     lens    => 'postfix_transport.aug',
+    incl    => "$file",
     context => "/files${file}",
     changes => $changes,
     require => Package['postfix'],

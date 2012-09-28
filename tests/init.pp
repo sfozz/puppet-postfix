@@ -1,1 +1,1 @@
-include postfix
+class {'postfix': }

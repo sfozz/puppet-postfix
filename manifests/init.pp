@@ -16,57 +16,21 @@
 #     include postfix
 #   }
 #
-class postfix {
+class postfix (
+  $postfix_smtp_listen = $postfix::params::postfix_smtp_listen,
+  $root_mail_recipient = $postfix::params::root_mail_recipient,
+  $postfix_use_amavisd = $postfix::params::postfix_use_amavisd,
+  $postfix_use_dovecot_lda = $postfix::params::postfix_use_dovecot_lda,
+  $postfix_use_schleuder = $postfix::params::postfix_use_schleuder,
+  $postfix_use_sympa = $postfix::params::postfix_use_sympa,
+  $postfix_mail_user = $postfix::params::postfix_mail_user,
+  $postfix_seltype = $postfix::params::postfix_seltype,
+  $postfix_aliases_seltype = $postfix::params::postfix_aliases_seltype
+) inherits postfix::params {
 
-  # selinux labels differ from one distribution to another
-  case $::operatingsystem {
+  $mailx_package = $postfix::params::mailx_package
 
-    RedHat, CentOS: {
-      case $::lsbmajdistrelease {
-        '4':     { $postfix_seltype = 'etc_t' }
-        '5','6': { $postfix_seltype = 'postfix_etc_t' }
-        default: { $postfix_seltype = undef }
-      }
-    }
-
-    default: {
-      $postfix_seltype = undef
-    }
-  }
-
-  # Default value for various options
-  if $postfix_smtp_listen == '' {
-    $postfix_smtp_listen = '127.0.0.1'
-  }
-  if $root_mail_recipient == '' {
-    $root_mail_recipient = 'nobody'
-  }
-  if $postfix_use_amavisd == '' {
-    $postfix_use_amavisd = 'no'
-  }
-  if $postfix_use_dovecot_lda == '' {
-    $postfix_use_dovecot_lda = 'no'
-  }
-  if $postfix_use_schleuder == '' {
-    $postfix_use_schleuder = 'no'
-  }
-  if $postfix_use_sympa == '' {
-    $postfix_use_sympa = 'no'
-  }
-  if $postfix_mail_user == '' {
-    $postfix_mail_user = 'vmail'
-  }
-
-  $mailx_package = $::lsbdistcodename ? {
-    'squeeze' => 'bsd-mailx',
-    'lucid'   => 'bsd-mailx',
-    default   => 'mailx',
-  }
-
-  $master_os_template = $::operatingsystem ? {
-    /RedHat|CentOS/          => template('postfix/master.cf.redhat.erb', 'postfix/master.cf.common.erb'),
-    /Debian|Ubuntu|kFreeBSD/ => template('postfix/master.cf.debian.erb', 'postfix/master.cf.common.erb'),
-  }
+  $master_os_template = $postfix::params::master_os_template
 
   package { 'postfix':
     ensure => installed,
@@ -78,11 +42,11 @@ class postfix {
   }
 
   service { 'postfix':
-    ensure    => running,
-    enable    => true,
-    hasstatus => true,
-    restart   => '/etc/init.d/postfix reload',
-    require   => Package['postfix'],
+    ensure     => running,
+    enable     => true,
+    hasstatus  => true,
+    hasrestart => true,
+    require    => Package['postfix'],
   }
 
   file { '/etc/mailname':
@@ -96,7 +60,7 @@ class postfix {
     ensure  => present,
     content => '# file managed by puppet\n',
     replace => false,
-    seltype => $postfix_seltype,
+    seltype => $postfix_aliases_seltype,
     notify  => Exec['newaliases'],
   }
 

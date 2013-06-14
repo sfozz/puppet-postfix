@@ -16,7 +16,16 @@
 #     include postfix
 #   }
 #
-class postfix {
+class postfix (
+  $valid_fqdn              = undef,
+  $postfix_smtp_listen     = '127.0.0.1',
+  $root_mail_recipient     = 'nobody',
+  $postfix_use_amavisd     = 'no',
+  $postfix_use_dovecot_lda = 'no',
+  $postfix_use_schleuder   = 'no',
+  $postfix_use_sympa       = 'no',
+  $postfix_mail_user       = 'vmail',
+  ){
 
   # selinux labels differ from one distribution to another
   case $::operatingsystem {
@@ -32,29 +41,6 @@ class postfix {
     default: {
       $postfix_seltype = undef
     }
-  }
-
-  # Default value for various options
-  if $postfix_smtp_listen == '' {
-    $postfix_smtp_listen = '127.0.0.1'
-  }
-  if $root_mail_recipient == '' {
-    $root_mail_recipient = 'nobody'
-  }
-  if $postfix_use_amavisd == '' {
-    $postfix_use_amavisd = 'no'
-  }
-  if $postfix_use_dovecot_lda == '' {
-    $postfix_use_dovecot_lda = 'no'
-  }
-  if $postfix_use_schleuder == '' {
-    $postfix_use_schleuder = 'no'
-  }
-  if $postfix_use_sympa == '' {
-    $postfix_use_sympa = 'no'
-  }
-  if $postfix_mail_user == '' {
-    $postfix_mail_user = 'vmail'
   }
 
   case $::operatingsystem {
@@ -102,7 +88,7 @@ class postfix {
 
   file { '/etc/mailname':
     ensure  => present,
-    content => "$::fqdn\n",
+    content => "${::fqdn}\n",
     seltype => $postfix_seltype,
   }
 
